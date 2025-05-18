@@ -254,6 +254,8 @@ def create_one_server(attrs=None):
     server_info.update(attrs)
     server = _server.Server(**server_info)
 
+    server.user_name = attrs.get('user_name', 'test-user')
+
     # Override methods
     server.trigger_crash_dump = mock.MagicMock()
 

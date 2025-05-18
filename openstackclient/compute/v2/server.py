@@ -2836,7 +2836,7 @@ class ListServer(command.Lister):
                 else:
                     columns += ('flavor_name',)
                 column_headers += ('Flavor',)
-            
+
         columns += ('user_name',)
         column_headers += ('User Name',)
 

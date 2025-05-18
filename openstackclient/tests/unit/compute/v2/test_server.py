@@ -4576,6 +4576,7 @@ class _TestServerList(TestServer):
         'Networks',
         'Image',
         'Flavor',
+        'User Name',
     )
     columns_long = (
         'ID',
@@ -4588,6 +4589,7 @@ class _TestServerList(TestServer):
         'Image ID',
         'Flavor Name',
         'Flavor ID',
+        'User Name',
         'Availability Zone',
         'Pinned Availability Zone',
         'Host',
@@ -4650,6 +4652,10 @@ class TestServerList(_TestServerList):
     def setUp(self):
         super().setUp()
 
+        user_mock = mock.Mock()
+        user_mock.name = 'test-user'
+        self.identity_client.users.get = mock.Mock(return_value=user_mock)
+
         Image = collections.namedtuple('Image', 'id name')
         self.image_client.images.return_value = [
             Image(id=s.image['id'], name=self.image.name)
@@ -4673,6 +4679,7 @@ class TestServerList(_TestServerList):
                 # Image will be an empty string if boot-from-volume
                 self.image.name if s.image else server.IMAGE_STRING_FOR_BFV,
                 self.flavor.name,
+                s.user_name,
             )
             for s in self.servers
         )
@@ -4728,6 +4735,7 @@ class TestServerList(_TestServerList):
                 s.image['id'] if s.image else server.IMAGE_STRING_FOR_BFV,
                 self.flavor.name,
                 s.flavor['id'],
+                s.user_name,
                 getattr(s, 'availability_zone'),
                 getattr(s, 'pinned_availability_zone', ''),
                 server.HostColumn(getattr(s, 'hypervisor_hostname')),
@@ -4818,6 +4826,7 @@ class TestServerList(_TestServerList):
                 # Image will be an empty string if boot-from-volume
                 s.image['id'] if s.image else server.IMAGE_STRING_FOR_BFV,
                 s.flavor['id'],
+                s.user_name,
             )
             for s in self.servers
         )
@@ -4849,6 +4858,7 @@ class TestServerList(_TestServerList):
                 # Image will be an empty string if boot-from-volume
                 s.image['id'] if s.image else server.IMAGE_STRING_FOR_BFV,
                 s.flavor['id'],
+                s.user_name,
             )
             for s in self.servers
         )
@@ -5215,6 +5225,7 @@ class TestServerList(_TestServerList):
                 s.image['id'] if s.image else server.IMAGE_STRING_FOR_BFV,
                 self.flavor.name,
                 s.flavor['id'],
+                s.user_name,
                 getattr(s, 'availability_zone'),
                 getattr(s, 'pinned_availability_zone', ''),
                 server.HostColumn(getattr(s, 'hypervisor_hostname')),
@@ -5271,6 +5282,7 @@ class TestServerList(_TestServerList):
                 s.image['id'] if s.image else server.IMAGE_STRING_FOR_BFV,
                 self.flavor.name,
                 s.flavor['id'],
+                s.user_name,
                 getattr(s, 'availability_zone'),
                 getattr(s, 'pinned_availability_zone', ''),
                 server.HostColumn(getattr(s, 'hypervisor_hostname')),
@@ -5298,6 +5310,7 @@ class TestServerListV273(_TestServerList):
         'Networks',
         'Image',
         'Flavor',
+        'User Name',
     )
     columns_long = (
         'ID',
@@ -5309,6 +5322,7 @@ class TestServerListV273(_TestServerList):
         'Image Name',
         'Image ID',
         'Flavor',
+        'User Name',
         'Availability Zone',
         'Pinned Availability Zone',
         'Host',
@@ -5347,6 +5361,10 @@ class TestServerListV273(_TestServerList):
         # called
         self.compute_client.flavors = mock.NonCallableMock()
 
+        user_mock = mock.Mock()
+        user_mock.name = 'test-user'
+        self.identity_client.users.get = mock.Mock(return_value=user_mock)
+
         self.data = tuple(
             (
                 s.id,
@@ -5356,6 +5374,7 @@ class TestServerListV273(_TestServerList):
                 # Image will be an empty string if boot-from-volume
                 self.image.name if s.image else server.IMAGE_STRING_FOR_BFV,
                 self.flavor.name,
+                s.user_name,
             )
             for s in self.servers
         )
@@ -5502,6 +5521,7 @@ class TestServerListV273(_TestServerList):
             None,
             'UNKNOWN',
             server.AddressesColumn(None),
+            '',
             '',
             '',
         )
