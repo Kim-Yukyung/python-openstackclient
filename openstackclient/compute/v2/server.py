@@ -2836,6 +2836,9 @@ class ListServer(command.Lister):
                 else:
                     columns += ('flavor_name',)
                 column_headers += ('Flavor',)
+            
+        columns += ('user_name',)
+        column_headers += ('User Name',)
 
         if parsed_args.long:
             columns += (
@@ -3026,6 +3029,12 @@ class ListServer(command.Lister):
                 s.flavor_id = s.flavor['id']
             else:
                 s.flavor_name = s.flavor['original_name']
+
+            try:
+                user_obj = identity_client.users.get(s.user_id)
+                s.user_name = user_obj.name
+            except Exception:
+                s.user_name = 'N/A'
 
         # Add a list with security group name as attribute
         for s in data:

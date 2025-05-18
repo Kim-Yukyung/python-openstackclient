@@ -1,0 +1,10 @@
+#!/Users/kim-yukyung/Documents/python-openstackclient/venv/bin/python
+# PBR Generated from 'console_scripts'
+
+import sys
+
+from oslo_config.generator import main
+
+
+if __name__ == "__main__":
+    sys.exit(main())
