@@ -26,3 +26,5 @@ cover
 releasenotes/build
 
 .vscode/
+venv/
+clouds.yaml

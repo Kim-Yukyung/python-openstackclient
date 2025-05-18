@@ -1,9 +1,0 @@
-clouds:
-  devstack:
-    auth:
-      auth_url: http://133.186.135.167/identity
-      project_name: project05
-      domain_name: Default
-      username: user05
-      password: "!Ccetjlu"
-    region_name: RegionOne
