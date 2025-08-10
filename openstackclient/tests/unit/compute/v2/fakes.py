@@ -248,6 +248,8 @@ def create_one_server(attrs=None):
             'id': 'flavor-id-' + uuid.uuid4().hex,
         },
         'OS-EXT-STS:power_state': 1,
+        'user_id': 'user-id-' + uuid.uuid4().hex,
+        'project_id': 'project-id-' + uuid.uuid4().hex,
     }
 
     # Overwrite default attributes.

@@ -1295,6 +1295,8 @@ class TestServerCreate(TestServer):
             'networks': {},
             'image': self.image,
             'flavor': self.flavor,
+            'user_id': None,
+            'project_id': None,
         }
         self.server = compute_fakes.create_one_server(attrs=attrs)
 
@@ -4576,6 +4578,8 @@ class _TestServerList(TestServer):
         'Networks',
         'Image',
         'Flavor',
+        'User Name',
+        'Project Name',
     )
     columns_long = (
         'ID',
@@ -4593,6 +4597,8 @@ class _TestServerList(TestServer):
         'Host',
         'Properties',
         'Scheduler Hints',
+        'User Name',
+        'Project Name',
     )
     columns_all_projects = (
         'ID',
@@ -4602,6 +4608,8 @@ class _TestServerList(TestServer):
         'Image',
         'Flavor',
         'Project ID',
+        'User Name',
+        'Project Name',
     )
 
     def setUp(self):
@@ -4651,6 +4659,28 @@ class _TestServerList(TestServer):
         self.servers = self.setup_sdk_servers_mock(3)
         self.compute_client.servers.return_value = self.servers
 
+        # Keystone Identity에서 사용자 및 프로젝트 조회를 위한 모킹 설정
+        # 실제 OpenStack에서는 Identity API를 호출해
+        # 사용자 이름과 프로젝트 이름을 가져오지만, 테스트에서는 모킹함
+        User = collections.namedtuple('User', 'id name')
+        Project = collections.namedtuple('Project', 'id name')
+
+        # 서로 다른 user_id와 project_id에 대해 각각 다른 객체를 반환하도록 side_effect를 설정
+        def get_user_side_effect(user_id):
+            # 어떤 user_id가 들어와도 해당 ID를 가진 User 객체를 생성하지만
+            # 이름은 항상 'test-user'로 고정
+            return User(id=user_id, name='test-user')
+
+        def get_project_side_effect(project_id):
+            # 어떤 project_id가 들어와도 해당 ID를 가진 Project 객체를 생성하지만
+            # 이름은 항상 'test-project'로 고정
+            return Project(id=project_id, name='test-project')
+
+        # Identity 클라이언트의 users.get()과 projects.get() 메서드를
+        # 위에서 정의한 side_effect 함수로 모킹 설정
+        self.identity_client.users.get.side_effect = get_user_side_effect
+        self.identity_client.projects.get.side_effect = get_project_side_effect
+
         # Get the command object to test
         self.cmd = server.ListServer(self.app, None)
 
@@ -4682,6 +4712,8 @@ class TestServerList(_TestServerList):
                 # Image will be an empty string if boot-from-volume
                 self.image.name if s.image else server.IMAGE_STRING_FOR_BFV,
                 self.flavor.name,
+                'test-user',
+                'test-project',
             )
             for s in self.servers
         )
@@ -4742,6 +4774,8 @@ class TestServerList(_TestServerList):
                 server.HostColumn(getattr(s, 'hypervisor_hostname')),
                 format_columns.DictColumn(s.metadata),
                 format_columns.DictListColumn(None),
+                'test-user',
+                'test-project',
             )
             for s in self.servers
         )
@@ -4775,6 +4809,8 @@ class TestServerList(_TestServerList):
                 self.image.name if s.image else server.IMAGE_STRING_FOR_BFV,
                 self.flavor.name,
                 s.project_id,
+                'test-user',
+                'test-project',
             )
             for s in self.servers
         )
@@ -4857,6 +4893,8 @@ class TestServerList(_TestServerList):
                 # Image will be an empty string if boot-from-volume
                 s.image['id'] if s.image else server.IMAGE_STRING_FOR_BFV,
                 s.flavor['id'],
+                'test-user',
+                'test-project',
             )
             for s in self.servers
         )
@@ -4888,6 +4926,8 @@ class TestServerList(_TestServerList):
                 # Image will be an empty string if boot-from-volume
                 s.image['id'] if s.image else server.IMAGE_STRING_FOR_BFV,
                 s.flavor['id'],
+                'test-user',
+                'test-project',
             )
             for s in self.servers
         )
@@ -5259,6 +5299,8 @@ class TestServerList(_TestServerList):
                 server.HostColumn(getattr(s, 'hypervisor_hostname')),
                 format_columns.DictColumn(s.metadata),
                 format_columns.DictListColumn(s.scheduler_hints),
+                'test-user',
+                'test-project',
             )
             for s in self.servers
         )
@@ -5315,6 +5357,8 @@ class TestServerList(_TestServerList):
                 server.HostColumn(getattr(s, 'hypervisor_hostname')),
                 format_columns.DictColumn(s.metadata),
                 format_columns.DictListColumn(s.scheduler_hints),
+                'test-user',
+                'test-project',
                 s.host_status,
             )
             for s in servers
@@ -5337,6 +5381,8 @@ class TestServerListV273(_TestServerList):
         'Networks',
         'Image',
         'Flavor',
+        'User Name',
+        'Project Name',
     )
     columns_long = (
         'ID',
@@ -5353,6 +5399,8 @@ class TestServerListV273(_TestServerList):
         'Host',
         'Properties',
         'Scheduler Hints',
+        'User Name',
+        'Project Name',
     )
 
     def setUp(self):
@@ -5395,6 +5443,8 @@ class TestServerListV273(_TestServerList):
                 # Image will be an empty string if boot-from-volume
                 self.image.name if s.image else server.IMAGE_STRING_FOR_BFV,
                 self.flavor.name,
+                'test-user',
+                'test-project',
             )
             for s in self.servers
         )
@@ -5543,6 +5593,8 @@ class TestServerListV273(_TestServerList):
             server.AddressesColumn(None),
             '',
             '',
+            'N/A',
+            'test-project',
         )
         self.assertEqual(expected_row, partial_server)
 
@@ -8496,6 +8548,7 @@ class TestServerShow(TestServer):
             'flavor': {'id': self.flavor.id},
             'tenant_id': 'tenant-id-xxx',
             'addresses': {'public': ['10.20.30.40', '2001:db8::f']},
+            'user_id': None,
         }
         self.compute_client.get_server_diagnostics.return_value = {
             'test': 'test'

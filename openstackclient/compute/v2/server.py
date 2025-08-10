@@ -2857,6 +2857,16 @@ class ListServer(command.Lister):
             columns += ('project_id',)
             column_headers += ('Project ID',)
 
+        # Add user_name and project_name columns
+        columns += (
+            'user_name',
+            'project_name',
+        )
+        column_headers += (
+            'User Name',
+            'Project Name',
+        )
+
         # support for additional columns
         if parsed_args.columns:
             for c in parsed_args.columns:
@@ -2866,6 +2876,12 @@ class ListServer(command.Lister):
                 if c in ('User ID', 'user_id'):
                     columns += ('user_id',)
                     column_headers += ('User ID',)
+                if c in ('User Name', 'user_name'):
+                    columns += ('user_name',)
+                    column_headers += ('User Name',)
+                if c in ('Project Name', 'project_name'):
+                    columns += ('project_name',)
+                    column_headers += ('Project Name',)
                 if c in ('Created At', 'created_at'):
                     columns += ('created_at',)
                     column_headers += ('Created At',)
@@ -3037,6 +3053,31 @@ class ListServer(command.Lister):
                 s.security_groups_name = [x["name"] for x in s.security_groups]
             else:
                 s.security_groups_name = []
+
+        # Add user_name and project_name attributes for each server
+        for s in data:
+            # Add user_name
+            if hasattr(s, 'user_id') and s.user_id:
+                try:
+                    user_obj = identity_client.users.get(s.user_id)
+                    s.user_name = user_obj.name
+                except Exception:
+                    s.user_name = 'N/A'
+            else:
+                s.user_name = "N/A"
+
+            # Add project_name
+            project_id = getattr(s, 'project_id', None) or getattr(
+                s, 'tenant_id', None
+            )
+            if project_id:
+                try:
+                    project_obj = identity_client.projects.get(project_id)
+                    s.project_name = project_obj.name
+                except Exception:
+                    s.project_name = 'N/A'
+            else:
+                s.project_name = "N/A"
 
         # The host_status field contains the status of the compute host the
         # server is on. It is only returned by the API when the nova-api
